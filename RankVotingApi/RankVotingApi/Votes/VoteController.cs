@@ -42,5 +42,13 @@ namespace RankVotingApi.Controllers
             var candidates = await voteBusiness.GetVoteResult(voteId);
             return new OkObjectResult(candidates);
         }
+
+        [HttpPost("/new")]
+        public async Task<IActionResult> SubmitNewRanking([FromBody] IEnumerable<string> ranking)
+        {
+            var voteId = await voteBusiness.SubmitNewRanking(ranking);
+            return new OkObjectResult(voteId);
+
+        }
     }
 }

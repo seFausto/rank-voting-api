@@ -8,5 +8,6 @@ namespace RankVotingApi.Votes
         Task SaveVotes(string id, IEnumerable<string> vote);
         Task<IEnumerable<string>> GetCandidates(string voteId);
         Task<IEnumerable<string>> GetVoteResult(string voteId);
+        Task<string> SubmitNewRanking(IEnumerable<string> ranking);
     }
 }
