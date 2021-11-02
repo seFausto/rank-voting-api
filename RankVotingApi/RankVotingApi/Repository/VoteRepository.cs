@@ -40,7 +40,7 @@ namespace RankVotingApi.Repository
                 });
         }
 
-        public async Task SaveVotes(string id, IEnumerable<string> rankings)
+        public async Task<bool> SaveVotes(string id, IEnumerable<string> rankings)
         {
             const string sql = @"UPDATE Candidates
                                 SET Rank = Rank + @rank
@@ -48,17 +48,26 @@ namespace RankVotingApi.Repository
                                 AND Candidate = @candidate;";
 
             using var connection = new SqliteConnection("Data Source=RankChoiceVoting.db");
-
-            for (int index = 0; index < rankings.Count(); index++)
+            try
             {
-                await connection.ExecuteAsync(sql,
-                    new
-                    {
-                        rank = index,
-                        voteId = id,
-                        candidate = rankings.ElementAt(index)
-                    });
+                for (int index = 0; index < rankings.Count(); index++)
+                {
+                    await connection.ExecuteAsync(sql,
+                        new
+                        {
+                            rank = index,
+                            voteId = id,
+                            candidate = rankings.ElementAt(index)
+                        });
+                }
+
+                return true;
             }
+            catch (Exception)
+            {
+                throw;
+            }
+            
         }
 
         public async Task SubmitNewRanking(string voteId, IEnumerable<string> ranking)

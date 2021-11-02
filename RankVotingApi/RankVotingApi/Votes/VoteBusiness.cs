@@ -14,9 +14,9 @@ namespace RankVotingApi.Votes
         {
             this.voteRepository = voteRepository;
         }
-        public async Task SaveVotes(string id, IEnumerable<string> vote)
+        public async Task<bool> SaveVotes(string id, IEnumerable<string> vote)
         {
-            await voteRepository.SaveVotes(id, vote);
+           return await voteRepository.SaveVotes(id, vote);
         }
 
         public async Task<IEnumerable<string>> GetCandidates(string voteId)
