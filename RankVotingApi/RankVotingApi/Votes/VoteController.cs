@@ -11,7 +11,7 @@ namespace RankVotingApi.Controllers
 {
     [ApiController]
     [EnableCors()]
-    [Route("[controller]")]    
+    [Route("[controller]")]
     public class VoteController : ControllerBase
     {
         private readonly IVoteBusiness voteBusiness;
@@ -19,9 +19,9 @@ namespace RankVotingApi.Controllers
         {
             this.voteBusiness = voteBusiness;
         }
-        
-        [HttpPost("{voteId}")]        
-        public async Task<IActionResult> SubmitVote(string voteId, 
+
+        [HttpPost("{voteId}")]
+        public async Task<IActionResult> SubmitVote(string voteId,
             [FromBody] IEnumerable<string> ranking)
         {
             await voteBusiness.SaveVotes(voteId, ranking);
@@ -47,7 +47,7 @@ namespace RankVotingApi.Controllers
         public async Task<IActionResult> SubmitNewRanking([FromBody] IEnumerable<string> ranking)
         {
             var voteId = await voteBusiness.SubmitNewRanking(ranking);
-            return new OkObjectResult(voteId);
+            return new OkObjectResult(Newtonsoft.Json.JsonConvert.SerializeObject(voteId));
 
         }
     }
