@@ -64,22 +64,28 @@ namespace RankVotingApi.Repository
         public async Task SubmitNewRanking(string voteId, IEnumerable<string> ranking)
         {
             const string sql = @"INSERT INTO Candidates (VoteId, Candidate, Rank)
-                                 VALUES (voteId, candidate, rank)   ";
+                                 VALUES (@voteId, @candidate, @rank)   ";
 
-                                   using var connection = new SqliteConnection("Data Source=RankChoiceVoting.db");
+            using var connection = new SqliteConnection("Data Source=RankChoiceVoting.db");
 
-            
-            for (int index = 0; index < ranking.Count(); index++)
+            try
             {
-                await connection.ExecuteAsync(sql,
-                    new
-                    {
-                        rank = 0,
-                        voteId = voteId,
-                        candidate = ranking.ElementAt(index)
-                    });
+                for (int index = 0; index < ranking.Count(); index++)
+                {
+                    await connection.ExecuteAsync(sql,
+                        new
+                        {
+                            rank = 0,
+                            voteId = voteId,
+                            candidate = ranking.ElementAt(index)
+                        });
+                }
             }
-
+            catch (Exception ex)
+            {
+                var d = ex;
+                throw;
+            }
         }
     }
 }
