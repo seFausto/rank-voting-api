@@ -24,7 +24,7 @@ namespace RankVotingApi.Repository
                 });
         }
 
-        public async Task<IEnumerable<string>> GetSubmittedRanking(string voteId, string userId)
+        public async Task<IEnumerable<string>> GetSubmittedVote(string voteId, string userId)
         {
             const string sql = @"SELECT Candidate 
                                 FROM Candidates 

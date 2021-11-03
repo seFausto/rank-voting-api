@@ -42,7 +42,7 @@ namespace RankVotingApi.Controllers
             }
             else
             {
-                candidates = await voteBusiness.GetSubmittedRanking(voteId, userId);
+                candidates = await voteBusiness.GetSubmittedVote(voteId, userId);
             }
 
             return new OkObjectResult(JsonConvert.SerializeObject(candidates));

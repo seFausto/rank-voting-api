@@ -39,9 +39,9 @@ namespace RankVotingApi.Votes
             return voteId;
         }
 
-        public async Task<IEnumerable<string>> GetSubmittedRanking(string voteId, string userId)
+        public async Task<IEnumerable<string>> GetSubmittedVote(string voteId, string userId)
         {
-            return await voteRepository.GetSubmittedRanking(voteId, userId);
+            return await voteRepository.GetSubmittedVote(voteId, userId);
         }
     }
 }
