@@ -21,20 +21,30 @@ namespace RankVotingApi.Controllers
             this.voteBusiness = voteBusiness;
         }
 
-        [HttpPost("{voteId}")]
-        public async Task<IActionResult> SubmitVote(string voteId,
+        [HttpPost("{voteId}/{userId}")]
+        public async Task<IActionResult> SubmitVote(string voteId, string userId,
             [FromBody] IEnumerable<string> ranking)
         {
-            if (await voteBusiness.SaveVotes(voteId, ranking))
+            if (await voteBusiness.SaveVotes(voteId, userId, ranking))
                 return new OkObjectResult(JsonConvert.SerializeObject("success"));
             else
                 return StatusCode(500, JsonConvert.SerializeObject("failed"));
         }
 
-        [HttpGet("{voteId}/candidates")]
-        public async Task<IActionResult> GetCandidates(string voteId)
+        [HttpPost("{voteId}/candidates")]
+        public async Task<IActionResult> GetCandidates(string voteId, [FromBody]  string userId)
         {
-            var candidates = await voteBusiness.GetCandidates(voteId);
+            IEnumerable<string> candidates;
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                candidates = await voteBusiness.GetCandidates(voteId);
+            }
+            else
+            {
+                candidates = await voteBusiness.GetSubmittedRanking(voteId, userId);
+            }
+
             return new OkObjectResult(JsonConvert.SerializeObject(candidates));
         }
 

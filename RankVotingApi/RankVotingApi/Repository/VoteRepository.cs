@@ -24,6 +24,21 @@ namespace RankVotingApi.Repository
                 });
         }
 
+        public async Task<IEnumerable<string>> GetSubmittedRanking(string voteId, string userId)
+        {
+            const string sql = @"SELECT Candidate 
+                                FROM Candidates 
+                                WHERE VoteId = @voteId;";
+
+            using var connection = new SqliteConnection("Data Source=RankChoiceVoting.db");
+
+            return await connection.QueryAsync<string>(sql,
+                new
+                {
+                    voteId
+                });
+        }
+
         public async Task<IEnumerable<string>> GetVoteResult(string voteId)
         {
             const string sql = @"SELECT Candidate 

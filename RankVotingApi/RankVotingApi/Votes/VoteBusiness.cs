@@ -14,9 +14,10 @@ namespace RankVotingApi.Votes
         {
             this.voteRepository = voteRepository;
         }
-        public async Task<bool> SaveVotes(string id, IEnumerable<string> vote)
+        public async Task<bool> SaveVotes(string id, string userId, IEnumerable<string> vote)
         {
-           return await voteRepository.SaveVotes(id, vote);
+            //Also save how this user voted
+            return await voteRepository.SaveVotes(id, vote);
         }
 
         public async Task<IEnumerable<string>> GetCandidates(string voteId)
@@ -36,6 +37,11 @@ namespace RankVotingApi.Votes
             var voteId = guid.Substring(guid.Length - 4);
             await voteRepository.SubmitNewRanking(voteId, ranking);
             return voteId;
+        }
+
+        public async Task<IEnumerable<string>> GetSubmittedRanking(string voteId, string userId)
+        {
+            return await voteRepository.GetSubmittedRanking(voteId, userId);
         }
     }
 }

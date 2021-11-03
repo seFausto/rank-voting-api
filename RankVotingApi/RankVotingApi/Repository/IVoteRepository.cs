@@ -9,5 +9,6 @@ namespace RankVotingApi.Repository
         Task<IEnumerable<string>> GetCandidates(string voteId);
         Task<IEnumerable<string>> GetVoteResult(string voteId);
         Task SubmitNewRanking(string voteId, IEnumerable<string> ranking);
+        Task<IEnumerable<string>> GetSubmittedRanking(string voteId, string userId);
     }
 }
