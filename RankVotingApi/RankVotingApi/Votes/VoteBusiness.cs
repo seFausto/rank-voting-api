@@ -14,10 +14,19 @@ namespace RankVotingApi.Votes
         {
             this.voteRepository = voteRepository;
         }
-        public async Task<bool> SaveVotes(string id, string userId, IEnumerable<string> vote)
+        public async Task<bool> SaveVotes(string voteId, string userId, IEnumerable<string> vote)
         {
             //Also save how this user voted
-            return await voteRepository.SaveVotes(id, vote);
+            try
+            {
+                await voteRepository.SaveVote(voteId, userId, vote);
+                return await voteRepository.AddVote(voteId, vote);
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+            
         }
 
         public async Task<IEnumerable<string>> GetCandidates(string voteId)
