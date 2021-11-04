@@ -39,12 +39,12 @@ namespace RankVotingApi.Votes
         {
             return await voteRepository.GetVoteResult(voteId);
         }
-        public async Task<string> SubmitNewRanking(IEnumerable<string> ranking)
-        {
-            //generate id
+        public async Task<string> SubmitNewRanking(string rankingName, 
+            IEnumerable<string> ranking)
+        {   
             var guid = Guid.NewGuid().ToString();
             var voteId = guid.Substring(guid.Length - 4);
-            await voteRepository.SubmitNewRanking(voteId, ranking);
+            await voteRepository.SubmitNewRanking(voteId, rankingName, ranking);
             return voteId;
         }
 
@@ -52,5 +52,8 @@ namespace RankVotingApi.Votes
         {
             return await voteRepository.GetSubmittedVote(voteId, userId);
         }
+
+        public async Task<string> GetRankingInfo(string voteId) 
+            => await voteRepository.GetRankingInfo(voteId);
     }
 }

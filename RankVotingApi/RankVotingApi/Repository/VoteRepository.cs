@@ -48,7 +48,7 @@ namespace RankVotingApi.Repository
                 var d = ex;
                 throw;
             }
-            
+
         }
 
         public async Task<IEnumerable<string>> GetVoteResult(string voteId)
@@ -67,7 +67,7 @@ namespace RankVotingApi.Repository
                 });
         }
 
-        public async Task<bool> AddVote(string id, IEnumerable<string> rankings)
+        public async Task<bool> AddVote(string voteId, IEnumerable<string> rankings)
         {
             const string sql = @"UPDATE Candidates
                                 SET Rank = Rank + @rank
@@ -83,7 +83,7 @@ namespace RankVotingApi.Repository
                         new
                         {
                             rank = index,
-                            voteId = id,
+                            voteId = voteId,
                             candidate = rankings.ElementAt(index)
                         });
                 }
@@ -97,15 +97,26 @@ namespace RankVotingApi.Repository
             }
         }
 
-        public async Task SubmitNewRanking(string voteId, IEnumerable<string> ranking)
+        public async Task SubmitNewRanking(string voteId, string rankingName, IEnumerable<string> ranking)
         {
             const string sql = @"INSERT INTO Candidates (VoteId, Candidate, Rank)
                                  VALUES (@voteId, @candidate, @rank)   ";
+
+            const string sql2 = @"INSERT INTO Ranking (VoteId, Title, Description) 
+                                 VALUES (@voteId, @title, @description)";
 
             using var connection = new SqliteConnection("Data Source=RankChoiceVoting.db");
 
             try
             {
+                await connection.ExecuteAsync(sql2,
+                    new
+                    {
+                        voteId,
+                        title = rankingName,
+                        description = string.Empty
+                    });
+
                 for (int index = 0; index < ranking.Count(); index++)
                 {
                     await connection.ExecuteAsync(sql,
@@ -139,7 +150,7 @@ namespace RankVotingApi.Repository
                         {
                             voteId,
                             userId,
-                            rank = index,                            
+                            rank = index,
                             candidate = vote.ElementAt(index)
                         });
                 }
@@ -151,6 +162,30 @@ namespace RankVotingApi.Repository
                 var d = ex;
                 throw;
             }
+        }
+
+        public async Task<string> GetRankingInfo(string voteId)
+        {
+            const string sql = @"SELECT Title 
+                                FROM Ranking 
+                                WHERE VoteId = @voteId";
+
+            try
+            {
+                using var connection = new SqliteConnection("Data Source=RankChoiceVoting.db");
+                var title = await connection.QuerySingleOrDefaultAsync<string>(sql,
+                    new
+                    {
+                        voteId
+                    });
+                return title;
+            }
+            catch (Exception ex)
+            {
+                var d = ex;
+                throw;
+            }
+
         }
     }
 }

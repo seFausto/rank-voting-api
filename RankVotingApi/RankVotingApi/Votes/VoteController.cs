@@ -21,7 +21,7 @@ namespace RankVotingApi.Controllers
             this.voteBusiness = voteBusiness;
         }
 
-        [HttpPost("{voteId}/{userId}")]
+        [HttpPost("{voteId}/submit/{userId}")]
         public async Task<IActionResult> SubmitVote(string voteId, string userId,
             [FromBody] IEnumerable<string> ranking)
         {
@@ -31,18 +31,19 @@ namespace RankVotingApi.Controllers
                 return StatusCode(500, JsonConvert.SerializeObject("failed"));
         }
 
-        [HttpPost("{voteId}/candidates")]
-        public async Task<IActionResult> GetCandidates(string voteId, [FromBody]  string userId)
+        [HttpPost("{voteId}/candidates/{didVote}")]
+        public async Task<IActionResult> GetCandidates(string voteId, bool didVote,
+            [FromBody] string userId)
         {
             IEnumerable<string> candidates;
 
-            if (string.IsNullOrEmpty(userId))
+            if (didVote)
             {
-                candidates = await voteBusiness.GetCandidates(voteId);
+                candidates = await voteBusiness.GetSubmittedVote(voteId, userId);                
             }
             else
             {
-                candidates = await voteBusiness.GetSubmittedVote(voteId, userId);
+                candidates = await voteBusiness.GetCandidates(voteId);
             }
 
             return new OkObjectResult(JsonConvert.SerializeObject(candidates));
@@ -55,12 +56,18 @@ namespace RankVotingApi.Controllers
             return new OkObjectResult(JsonConvert.SerializeObject(candidates));
         }
 
-        [HttpPost("/new")]
-        public async Task<IActionResult> SubmitNewRanking([FromBody] IEnumerable<string> ranking)
+        [HttpPost("/new/{rankingName}")]
+        public async Task<IActionResult> SubmitNewRanking(string rankingName, [FromBody] IEnumerable<string> ranking)
         {
-            var voteId = await voteBusiness.SubmitNewRanking(ranking);
+            var voteId = await voteBusiness.SubmitNewRanking(rankingName, ranking);
             return new OkObjectResult(JsonConvert.SerializeObject(voteId));
+        }
 
+        [HttpGet("{voteId}/info")]
+        public async Task<IActionResult> GetRankingInfoAsync(string voteId)
+        {         
+            var title = await voteBusiness.GetRankingInfo(voteId.Trim());
+            return new OkObjectResult(JsonConvert.SerializeObject(title));
         }
     }
 }
