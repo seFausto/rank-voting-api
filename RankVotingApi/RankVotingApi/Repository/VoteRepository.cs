@@ -1,9 +1,9 @@
-﻿using System;
+﻿using Dapper;
+using Microsoft.Data.Sqlite;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Dapper;
-using Microsoft.Data.Sqlite;
 
 namespace RankVotingApi.Repository
 {
@@ -99,17 +99,17 @@ namespace RankVotingApi.Repository
 
         public async Task SubmitNewRanking(string voteId, string rankingName, IEnumerable<string> ranking)
         {
-            const string sql = @"INSERT INTO Candidates (VoteId, Candidate, Rank)
+            const string insertIntoCandidates = @"INSERT INTO Candidates (VoteId, Candidate, Rank)
                                  VALUES (@voteId, @candidate, @rank)   ";
 
-            const string sql2 = @"INSERT INTO Ranking (VoteId, Title, Description) 
+            const string insertIntoRanking = @"INSERT INTO Ranking (VoteId, Title, Description) 
                                  VALUES (@voteId, @title, @description)";
 
             using var connection = new SqliteConnection("Data Source=RankChoiceVoting.db");
 
             try
             {
-                await connection.ExecuteAsync(sql2,
+                await connection.ExecuteAsync(insertIntoRanking,
                     new
                     {
                         voteId,
@@ -119,11 +119,11 @@ namespace RankVotingApi.Repository
 
                 for (int index = 0; index < ranking.Count(); index++)
                 {
-                    await connection.ExecuteAsync(sql,
+                    await connection.ExecuteAsync(insertIntoCandidates,
                         new
                         {
                             rank = 0,
-                            voteId = voteId,
+                            voteId,
                             candidate = ranking.ElementAt(index)
                         });
                 }

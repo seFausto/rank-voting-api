@@ -1,9 +1,9 @@
-﻿using System;
+﻿using RankVotingApi.Common;
+using RankVotingApi.Repository;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using RankVotingApi.Common;
-using RankVotingApi.Repository;
 
 namespace RankVotingApi.Votes
 {
@@ -26,7 +26,7 @@ namespace RankVotingApi.Votes
             {
                 throw;
             }
-            
+
         }
 
         public async Task<IEnumerable<string>> GetCandidates(string voteId)
@@ -39,9 +39,9 @@ namespace RankVotingApi.Votes
         {
             return await voteRepository.GetVoteResult(voteId);
         }
-        public async Task<string> SubmitNewRanking(string rankingName, 
+        public async Task<string> SubmitNewRanking(string rankingName,
             IEnumerable<string> ranking)
-        {   
+        {
             var guid = Guid.NewGuid().ToString();
             var voteId = guid.Substring(guid.Length - 4);
             await voteRepository.SubmitNewRanking(voteId, rankingName, ranking);
@@ -53,7 +53,7 @@ namespace RankVotingApi.Votes
             return await voteRepository.GetSubmittedVote(voteId, userId);
         }
 
-        public async Task<string> GetRankingInfo(string voteId) 
+        public async Task<string> GetRankingInfo(string voteId)
             => await voteRepository.GetRankingInfo(voteId);
     }
 }

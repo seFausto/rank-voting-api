@@ -1,11 +1,8 @@
 ﻿using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using RankVotingApi.Votes;
-using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace RankVotingApi.Controllers
@@ -39,7 +36,7 @@ namespace RankVotingApi.Controllers
 
             if (didVote)
             {
-                candidates = await voteBusiness.GetSubmittedVote(voteId, userId);                
+                candidates = await voteBusiness.GetSubmittedVote(voteId, userId);
             }
             else
             {
@@ -65,7 +62,7 @@ namespace RankVotingApi.Controllers
 
         [HttpGet("{voteId}/info")]
         public async Task<IActionResult> GetRankingInfoAsync(string voteId)
-        {         
+        {
             var title = await voteBusiness.GetRankingInfo(voteId.Trim());
             return new OkObjectResult(JsonConvert.SerializeObject(title));
         }
