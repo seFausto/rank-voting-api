@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using RankVotingApi.Votes;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -16,6 +18,13 @@ namespace RankVotingApi.Controllers
         public VoteController(IVoteBusiness voteBusiness)
         {
             this.voteBusiness = voteBusiness;
+        }
+
+        [HttpGet()]
+        public IActionResult HealthCheckAsync()
+        {
+            Console.WriteLine("Healthcheck");
+            return StatusCode(200, Ok());
         }
 
         [HttpPost("{voteId}/submit/{userId}")]
@@ -53,7 +62,7 @@ namespace RankVotingApi.Controllers
             return new OkObjectResult(JsonConvert.SerializeObject(candidates));
         }
 
-        [HttpPost("/new/{rankingName}")]
+        [HttpPost("new/{rankingName}")]
         public async Task<IActionResult> SubmitNewRanking(string rankingName, [FromBody] IEnumerable<string> ranking)
         {
             var voteId = await voteBusiness.SubmitNewRanking(rankingName, ranking);
