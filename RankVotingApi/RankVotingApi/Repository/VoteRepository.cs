@@ -100,7 +100,7 @@ namespace RankVotingApi.Repository
         public async Task SubmitNewRanking(string voteId, string rankingName, IEnumerable<string> ranking)
         {
             const string insertIntoCandidates = @"INSERT INTO Candidates (VoteId, Candidate, Rank)
-                                 VALUES (@voteId, @candidate, @rank)   ";
+                                 VALUES (@voteId, @candidate, @rank)";
 
             const string insertIntoRanking = @"INSERT INTO Ranking (VoteId, Title, Description) 
                                  VALUES (@voteId, @title, @description)";

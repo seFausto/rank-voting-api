@@ -1,0 +1,22 @@
+# Base image to use
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build-env
+# Sets working dir inside container
+WORKDIR /App
+
+# Copy everything from the current dir to the working dir inside container
+COPY . ./
+
+# Restore as distinct layers
+RUN dotnet restore
+
+# Build and publish a release
+RUN dotnet publish -c Release -o out
+
+# Build runtime image
+FROM mcr.microsoft.com/dotnet/aspnet:8.0
+WORKDIR /App
+
+EXPOSE 5000
+
+COPY --from=build-env /App/out .
+ENTRYPOINT ["dotnet", "RankVotingApi.dll"]
