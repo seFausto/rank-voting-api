@@ -5,6 +5,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
+using RankVotingApi.KafkaConsumer;
 using RankVotingApi.Repository;
 using RankVotingApi.Votes;
 using System;
@@ -41,10 +42,7 @@ namespace RankVotingApi
 
         private static void UpdateDatabase(IServiceProvider serviceProvider)
         {
-            // Instantiate the runner
             var runner = serviceProvider.GetRequiredService<IMigrationRunner>();
-
-            // Execute the migrations
             runner.MigrateUp();
         }
 
@@ -64,7 +62,7 @@ namespace RankVotingApi
                        .AllowAnyHeader();
             }));
 
-
+            
             services.AddControllers();
 
             services.AddSwaggerGen(c =>
@@ -74,6 +72,9 @@ namespace RankVotingApi
 
             services.AddScoped<IVoteBusiness, VoteBusiness>();
             services.AddScoped<IVoteRepository, VoteRepository>();
+            services.AddHostedService<KafkaConsumerService>();
+
+            services.Configure<KafkaOptions>(Configuration.GetSection("KafkaOptions"));
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
@@ -84,8 +85,7 @@ namespace RankVotingApi
                 app.UseSwagger();
                 app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "RankVotingApi v1"));
             }
-
-
+            
             app.UseHttpsRedirection();
 
             app.UseRouting();
