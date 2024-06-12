@@ -1,4 +1,5 @@
-﻿using RankVotingApi.Common;
+﻿using Microsoft.Extensions.Logging;
+using RankVotingApi.Common;
 using RankVotingApi.Repository;
 using System;
 using System.Collections.Generic;
@@ -10,9 +11,11 @@ namespace RankVotingApi.Votes
     public class VoteBusiness : IVoteBusiness
     {
         private readonly IVoteRepository voteRepository;
-        public VoteBusiness(IVoteRepository voteRepository)
+        private readonly ILogger _logger;
+        public VoteBusiness(IVoteRepository voteRepository, ILogger<VoteBusiness> logger)
         {
             this.voteRepository = voteRepository;
+            _logger = logger;
         }
         public async Task<bool> SaveVotes(string voteId, string userId, IEnumerable<string> vote)
         {
@@ -21,8 +24,9 @@ namespace RankVotingApi.Votes
                 await voteRepository.SaveVote(voteId, userId, vote);
                 return await voteRepository.AddVote(voteId, vote);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Error when saving vote {VoteId}", voteId);
                 throw;
             }
 
@@ -42,9 +46,14 @@ namespace RankVotingApi.Votes
             IEnumerable<string> ranking)
         {
             var guid = Guid.NewGuid().ToString();
-            var voteId = guid.Substring(guid.Length - 4);
-            await voteRepository.SubmitNewRanking(voteId, rankingName, ranking);
-            return voteId;
+            var rankId = guid.Substring(guid.Length - 4);
+            return await SubmitNewRanking(rankingName, rankId, ranking);
+        }
+
+        public async Task<string> SubmitNewRanking(string rankingName, string rankId, IEnumerable<string> ranking)
+        {  
+            await voteRepository.SubmitNewRanking(rankId, rankingName, ranking);
+            return rankId;
         }
 
         public async Task<IEnumerable<string>> GetSubmittedVote(string voteId, string userId)

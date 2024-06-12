@@ -1,9 +1,16 @@
 ﻿using Confluent.Kafka;
+using Microsoft.AspNetCore.Routing.Matching;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using RankVotingApi.Votes;
 using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -11,19 +18,25 @@ namespace RankVotingApi.KafkaConsumer
 {
     public class KafkaConsumerService : BackgroundService
     {
-        private IConfiguration _configuration;
-        private KafkaOptions _options;
-        private ILogger<KafkaConsumerService> _logger;
+        private readonly IConfiguration _configuration;
+        private readonly KafkaOptions _options;
+        private readonly IServiceScopeFactory _serviceScopeFactory;
 
-        public KafkaConsumerService(IOptions<KafkaOptions> options, IConfiguration configuration, ILogger<KafkaConsumerService> logger)
+        private readonly ILogger<KafkaConsumerService> _logger;
+
+        public KafkaConsumerService(IOptions<KafkaOptions> options, IConfiguration configuration,
+            IServiceScopeFactory serviceScopeFactory, ILogger<KafkaConsumerService> logger)
         {
             _configuration = configuration;
             _options = options.Value;
+
+            _serviceScopeFactory = serviceScopeFactory;
+
             _logger = logger;
         }
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            return Task.Run(() =>
+            return Task.Run(async () =>
             {
                 var config = Common.Common.GetKafkaConfiguration((IConfigurationRoot)_configuration);
 
@@ -35,7 +48,20 @@ namespace RankVotingApi.KafkaConsumer
                     while (!stoppingToken.IsCancellationRequested)
                     {
                         var result = consumer.Consume(stoppingToken);
+
+
                         _logger.LogInformation($"Consumed message '{result.Message.Value}' at: '{result.TopicPartitionOffset}'.");
+
+                        var ranking = JsonSerializer.Deserialize<Ranking>(result.Message.Value);
+
+                        using IServiceScope scope = _serviceScopeFactory.CreateScope();
+
+                        IVoteBusiness voteBusiness =
+                            scope.ServiceProvider.GetRequiredService<IVoteBusiness>();
+
+                        await voteBusiness.SubmitNewRanking(ranking.Name, ranking.Id,
+                            ranking.Candidates.Select(x => x.Name));
+
                     }
                 }
                 catch (OperationCanceledException)
@@ -45,4 +71,16 @@ namespace RankVotingApi.KafkaConsumer
             });
         }
     }
+}
+public class Ranking
+{
+    public string Id { get; set; }
+    public string Name { get; set; }
+    public IEnumerable<Candidate> Candidates { get; set; } = [];
+}
+
+public class Candidate
+{
+    public string RankingId { get; set; }
+    public string Name { get; set; }
 }

@@ -72,6 +72,7 @@ namespace RankVotingApi
 
             services.AddScoped<IVoteBusiness, VoteBusiness>();
             services.AddScoped<IVoteRepository, VoteRepository>();
+
             services.AddHostedService<KafkaConsumerService>();
 
             services.Configure<KafkaOptions>(Configuration.GetSection("KafkaOptions"));
