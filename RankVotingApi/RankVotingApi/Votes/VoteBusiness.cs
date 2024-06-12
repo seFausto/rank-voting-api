@@ -26,6 +26,7 @@ namespace RankVotingApi.Votes
             }
             catch (Exception ex)
             {
+                await Console.Out.WriteLineAsync(ex.Message);
                 _logger.LogError(ex, "Error when saving vote {VoteId}", voteId);
                 throw;
             }
@@ -46,12 +47,12 @@ namespace RankVotingApi.Votes
             IEnumerable<string> ranking)
         {
             var guid = Guid.NewGuid().ToString();
-            var rankId = guid.Substring(guid.Length - 4);
+            var rankId = guid[^4..];
             return await SubmitNewRanking(rankingName, rankId, ranking);
         }
 
         public async Task<string> SubmitNewRanking(string rankingName, string rankId, IEnumerable<string> ranking)
-        {  
+        {
             await voteRepository.SubmitNewRanking(rankId, rankingName, ranking);
             return rankId;
         }

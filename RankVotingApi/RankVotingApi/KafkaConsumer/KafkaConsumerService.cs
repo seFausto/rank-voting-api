@@ -8,7 +8,6 @@ using Microsoft.Extensions.Options;
 using RankVotingApi.Votes;
 using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
 using System.Threading;
@@ -50,7 +49,8 @@ namespace RankVotingApi.KafkaConsumer
                         var result = consumer.Consume(stoppingToken);
 
 
-                        _logger.LogInformation($"Consumed message '{result.Message.Value}' at: '{result.TopicPartitionOffset}'.");
+                        _logger.LogInformation("Consumed message '{MessageValue}' at: '{TopicPartitionOffset}'", 
+                            result.Message.Value, result.TopicPartitionOffset);
 
                         var ranking = JsonSerializer.Deserialize<Ranking>(result.Message.Value);
 
@@ -68,19 +68,7 @@ namespace RankVotingApi.KafkaConsumer
                 {
                     consumer.Close();
                 }
-            });
+            }, stoppingToken);
         }
     }
-}
-public class Ranking
-{
-    public string Id { get; set; }
-    public string Name { get; set; }
-    public IEnumerable<Candidate> Candidates { get; set; } = [];
-}
-
-public class Candidate
-{
-    public string RankingId { get; set; }
-    public string Name { get; set; }
 }

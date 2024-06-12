@@ -1,5 +1,6 @@
 ﻿using Dapper;
 using Microsoft.Data.Sqlite;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -45,7 +46,7 @@ namespace RankVotingApi.Repository
             }
             catch (Exception ex)
             {
-                var d = ex;
+                await Console.Out.WriteLineAsync(ex.Message);
                 throw;
             }
 
@@ -67,7 +68,7 @@ namespace RankVotingApi.Repository
                 });
         }
 
-        public async Task<bool> AddVote(string voteId, IEnumerable<string> rankings)
+        public async Task<bool> AddVote(string id, IEnumerable<string> rankings)
         {
             const string sql = @"UPDATE Candidates
                                 SET Rank = Rank + @rank
@@ -83,7 +84,7 @@ namespace RankVotingApi.Repository
                         new
                         {
                             rank = index,
-                            voteId = voteId,
+                            voteId = id,
                             candidate = rankings.ElementAt(index)
                         });
                 }
@@ -92,7 +93,7 @@ namespace RankVotingApi.Repository
             }
             catch (Exception ex)
             {
-                var d = ex;
+                await Console.Out.WriteLineAsync(ex.Message);
                 throw;
             }
         }
@@ -130,7 +131,7 @@ namespace RankVotingApi.Repository
             }
             catch (Exception ex)
             {
-                var d = ex;
+                await Console.Out.WriteLineAsync(ex.Message);
                 throw;
             }
         }
@@ -159,7 +160,7 @@ namespace RankVotingApi.Repository
             }
             catch (Exception ex)
             {
-                var d = ex;
+                await Console.Out.WriteLineAsync(ex.Message);
                 throw;
             }
         }
@@ -182,7 +183,7 @@ namespace RankVotingApi.Repository
             }
             catch (Exception ex)
             {
-                var d = ex;
+                await Console.Out.WriteLineAsync(ex.Message);
                 throw;
             }
 

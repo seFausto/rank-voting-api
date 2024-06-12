@@ -6,7 +6,7 @@ namespace RankVotingApi.Common
 
     public static class Helper
     {
-        private static Random rng = new Random();
+        private static readonly Random rng = new();
 
         public static List<T> Shuffle<T>(this List<T> list)
         {
@@ -15,9 +15,7 @@ namespace RankVotingApi.Common
             {
                 n--;
                 int k = rng.Next(n + 1);
-                T value = list[k];
-                list[k] = list[n];
-                list[n] = value;
+                (list[n], list[k]) = (list[k], list[n]);
             }
 
             return list;

@@ -22,7 +22,7 @@ namespace RankVotingApi
         public IConfiguration Configuration { get; }
 
 
-        private static IServiceProvider CreateServices()
+        private static Microsoft.Extensions.DependencyInjection.ServiceProvider CreateServices()
         {
             return new ServiceCollection()
                 // Add common FluentMigrator services

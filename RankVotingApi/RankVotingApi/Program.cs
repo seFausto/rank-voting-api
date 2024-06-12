@@ -8,6 +8,11 @@ namespace RankVotingApi
     {
         private const string Urls = "http://localhost:5000";
 
+        protected Program()
+        {
+            
+        }
+
         public static void Main(string[] args)
         {
             CreateHostBuilder(args)

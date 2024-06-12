@@ -6,6 +6,11 @@ namespace RankVotingApi.Common
 {
     public class Common
     {
+        protected Common()
+        {
+            
+        }
+
         public static IEnumerable<KeyValuePair<string, string>> GetKafkaConfiguration(IConfigurationRoot configuration)
         {
             var configurationRoot = configuration;
@@ -19,11 +24,11 @@ namespace RankVotingApi.Common
             }
 
             // Iterate through all the settings and add them to the list
-            foreach (var setting in configuration.AsEnumerable())
+            foreach (var key in configuration.AsEnumerable().Select(x=> x.Key))
             {
-                if (iniProvider.TryGet(setting.Key, out var value))
+                if (iniProvider.TryGet(key, out var value))
                 {
-                    iniSettings.Add(new KeyValuePair<string, string>(setting.Key, value));
+                    iniSettings.Add(new KeyValuePair<string, string>(key, value));
                 }
             }
             return iniSettings;
