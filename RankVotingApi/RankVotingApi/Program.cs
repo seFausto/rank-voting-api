@@ -23,7 +23,7 @@ namespace RankVotingApi
             Host.CreateDefaultBuilder(args)
                 .ConfigureAppConfiguration((context, config) =>
                 {
-                    config.AddIniFile("client.properties", optional: false, reloadOnChange: true);
+                    config.AddIniFile("kafkaClient.properties", optional: false, reloadOnChange: true);
                 })
                 .ConfigureWebHostDefaults(webBuilder =>
                 {

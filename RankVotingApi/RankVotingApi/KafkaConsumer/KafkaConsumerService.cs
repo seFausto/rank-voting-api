@@ -15,29 +15,25 @@ using System.Threading.Tasks;
 
 namespace RankVotingApi.KafkaConsumer
 {
-    public class KafkaConsumerService : BackgroundService
+    public class KafkaConsumerService(IOptions<KafkaOptions> options, IConfiguration configuration,
+        IServiceScopeFactory serviceScopeFactory, ILogger<KafkaConsumerService> logger) : BackgroundService
     {
-        private readonly IConfiguration _configuration;
-        private readonly KafkaOptions _options;
-        private readonly IServiceScopeFactory _serviceScopeFactory;
+        private readonly IConfiguration _configuration = configuration;
+        private readonly KafkaOptions _options = options.Value;
+        private readonly IServiceScopeFactory _serviceScopeFactory = serviceScopeFactory;
 
-        private readonly ILogger<KafkaConsumerService> _logger;
+        private readonly ILogger<KafkaConsumerService> _logger = logger;
 
-        public KafkaConsumerService(IOptions<KafkaOptions> options, IConfiguration configuration,
-            IServiceScopeFactory serviceScopeFactory, ILogger<KafkaConsumerService> logger)
-        {
-            _configuration = configuration;
-            _options = options.Value;
-
-            _serviceScopeFactory = serviceScopeFactory;
-
-            _logger = logger;
-        }
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
             return Task.Run(async () =>
             {
                 var config = Common.Common.GetKafkaConfiguration((IConfigurationRoot)_configuration);
+
+                using IServiceScope scope = _serviceScopeFactory.CreateScope();
+
+                IVoteBusiness voteBusiness =
+                    scope.ServiceProvider.GetRequiredService<IVoteBusiness>();
 
                 using var consumer = new ConsumerBuilder<Ignore, string>(config).Build();
                 consumer.Subscribe(_options.Topic);
@@ -48,20 +44,13 @@ namespace RankVotingApi.KafkaConsumer
                     {
                         var result = consumer.Consume(stoppingToken);
 
-
-                        _logger.LogInformation("Consumed message '{MessageValue}' at: '{TopicPartitionOffset}'", 
+                        _logger.LogInformation("Consumed message '{MessageValue}' at: '{TopicPartitionOffset}'",
                             result.Message.Value, result.TopicPartitionOffset);
 
-                        var ranking = JsonSerializer.Deserialize<Ranking>(result.Message.Value);
-
-                        using IServiceScope scope = _serviceScopeFactory.CreateScope();
-
-                        IVoteBusiness voteBusiness =
-                            scope.ServiceProvider.GetRequiredService<IVoteBusiness>();
+                        Ranking ranking = Common.Common.JsonDeserialize(result.Message.Value);
 
                         await voteBusiness.SubmitNewRanking(ranking.Name, ranking.Id,
                             ranking.Candidates.Select(x => x.Name));
-
                     }
                 }
                 catch (OperationCanceledException)
@@ -70,5 +59,6 @@ namespace RankVotingApi.KafkaConsumer
                 }
             }, stoppingToken);
         }
+
     }
 }

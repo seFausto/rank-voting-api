@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Configuration;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 
 namespace RankVotingApi.Common
 {
@@ -11,12 +12,18 @@ namespace RankVotingApi.Common
             
         }
 
+        public static Ranking JsonDeserialize(string value)
+        {
+            return JsonSerializer.Deserialize<Ranking>(value);
+        }
+
         public static IEnumerable<KeyValuePair<string, string>> GetKafkaConfiguration(IConfigurationRoot configuration)
         {
             var configurationRoot = configuration;
             var iniProvider = configurationRoot.Providers
                         .FirstOrDefault(p => p is Microsoft.Extensions.Configuration.Ini.IniConfigurationProvider);
-            var iniSettings = new List<KeyValuePair<string, string>>();
+
+            List<KeyValuePair<string, string>> iniSettings = [];
 
             if (iniProvider == null)
             {
