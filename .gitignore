@@ -359,5 +359,3 @@ MigrationBackup/
 # Exclude SQLite DB
 *.db
 
-# Ignore kafka settings file
-# kafkaClient.properties
