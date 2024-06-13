@@ -360,4 +360,4 @@ MigrationBackup/
 *.db
 
 # Ignore kafka settings file
-client.properties
+kafkaClient.properties
