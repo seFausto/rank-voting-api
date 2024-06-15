@@ -1,22 +1,25 @@
-# Base image to use
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build-env
-# Sets working dir inside container
-WORKDIR /App
+#See https://aka.ms/customizecontainer to learn how to customize your debug container and how Visual Studio uses this Dockerfile to build your images for faster debugging.
 
-# Copy everything from the current dir to the working dir inside container
-COPY . ./
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
+USER app
+WORKDIR /app
+EXPOSE 8080
+EXPOSE 8081
 
-# Restore as distinct layers
-RUN dotnet restore
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+ARG BUILD_CONFIGURATION=Release
+WORKDIR /src
+COPY ["RankVotingApi/RankVotingApi.csproj", "RankVotingApi/"]
+RUN dotnet restore "./RankVotingApi/RankVotingApi.csproj"
+COPY . .
+WORKDIR "/src/RankVotingApi"
+RUN dotnet build "./RankVotingApi.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
-# Build and publish a release
-RUN dotnet publish -c Release -o out
+FROM build AS publish
+ARG BUILD_CONFIGURATION=Release
+RUN dotnet publish "./RankVotingApi.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
 
-# Build runtime image
-FROM mcr.microsoft.com/dotnet/aspnet:8.0
-WORKDIR /App
-
-EXPOSE 5000
-
-COPY --from=build-env /App/out .
+FROM base AS final
+WORKDIR /app
+COPY --from=publish /app/publish .
 ENTRYPOINT ["dotnet", "RankVotingApi.dll"]
