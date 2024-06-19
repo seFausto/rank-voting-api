@@ -49,7 +49,7 @@ namespace RankVotingApi.Controllers
                 candidates = await voteBusiness.GetCandidates(voteId);
             }
 
-            return new OkObjectResult(SerializeJson(candidates));
+            return new OkObjectResult(SerializeJson(new { Candidates = candidates }));
         }
 
 
@@ -73,10 +73,10 @@ namespace RankVotingApi.Controllers
             var title = await voteBusiness.GetRankingInfo(voteId.Trim());
             return new OkObjectResult(SerializeJson(title));
         }
-        
+
         private static string SerializeJson(object candidates)
         {
             return JsonSerializer.Serialize(candidates);
-        }        
+        }
     }
 }
