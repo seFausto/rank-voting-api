@@ -6,11 +6,9 @@ namespace RankVotingApi
 {
     public class Program
     {
-        private const string Urls = "http://localhost:5000";
-
         protected Program()
         {
-            
+
         }
 
         public static void Main(string[] args)
@@ -28,7 +26,7 @@ namespace RankVotingApi
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
                     webBuilder.UseStartup<Startup>();
-                    webBuilder.UseUrls(Urls);
+
                 });
     }
 }
