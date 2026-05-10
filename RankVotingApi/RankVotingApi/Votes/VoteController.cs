@@ -74,7 +74,9 @@ namespace RankVotingApi.Controllers
         }
 
         [HttpPost("new/{rankingName}")]
-        public async Task<IActionResult> SubmitNewRanking(string rankingName, [FromBody] IEnumerable<string> ranking)
+        public async Task<IActionResult> SubmitNewRanking(
+            string rankingName, 
+            [FromBody] IEnumerable<string> ranking)
         {
             var voteId = await voteBusiness.SubmitNewRanking(rankingName, ranking);
             return Ok(voteId);

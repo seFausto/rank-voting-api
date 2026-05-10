@@ -1,16 +1,12 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
+using System;
 
 namespace RankVotingApi
 {
     public class Program
     {
-        protected Program()
-        {
-
-        }
-
         public static void Main(string[] args)
         {
             CreateHostBuilder(args)
@@ -25,8 +21,9 @@ namespace RankVotingApi
                 })
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
-                    webBuilder.UseStartup<Startup>();
-
+					var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
+					webBuilder.UseUrls($"http://0.0.0.0:{port}");
+					webBuilder.UseStartup<Startup>();
                 });
     }
 }
