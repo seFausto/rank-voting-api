@@ -5,7 +5,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
-using RankVotingApi.KafkaConsumer;
 using RankVotingApi.Repository;
 using RankVotingApi.Votes;
 using System;
@@ -73,9 +72,6 @@ namespace RankVotingApi
             services.AddScoped<IVoteBusiness, VoteBusiness>();
             services.AddScoped<IVoteRepository, VoteRepository>();
 
-            services.AddHostedService<KafkaConsumerService>();
-
-            services.Configure<KafkaOptions>(Configuration.GetSection("KafkaOptions"));
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
