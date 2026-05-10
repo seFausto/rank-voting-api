@@ -101,6 +101,16 @@ namespace RankVotingApi.Repository
             await transaction.CommitAsync();
         }
 
+        public async Task<int> GetBallotCount(string voteId)
+        {
+            const string sql = @"SELECT COUNT(DISTINCT UserId)
+                                FROM UserVotes
+                                WHERE VoteId = @voteId";
+
+            using var connection = new SqliteConnection(ConnectionString);
+            return await connection.ExecuteScalarAsync<int>(sql, new { voteId });
+        }
+
         public async Task<string> GetRankingInfo(string voteId)
         {
             const string sql = @"SELECT Title

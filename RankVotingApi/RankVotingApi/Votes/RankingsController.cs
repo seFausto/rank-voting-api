@@ -15,8 +15,8 @@ namespace RankVotingApi.Controllers
 
         [HttpPost("{name}")]
         public async Task<IActionResult> CreateRanking(
-            string name,
-            [FromBody] IEnumerable<string> candidates)
+        string name,
+        [FromBody] IEnumerable<string> candidates)
         {
             var id = await voteBusiness.SubmitNewRanking(name, candidates);
             return Ok(id);
@@ -41,6 +41,13 @@ namespace RankVotingApi.Controllers
         {
             var candidates = await voteBusiness.GetVoteResult(id);
             return Ok(candidates);
+        }
+
+        [HttpGet("{id}/ballots/count")]
+        public async Task<IActionResult> GetBallotCount(string id)
+        {
+            var count = await voteBusiness.GetBallotCount(id);
+            return Ok(new { Count = count });
         }
 
         [HttpGet("{id}/ballots/{userId}")]

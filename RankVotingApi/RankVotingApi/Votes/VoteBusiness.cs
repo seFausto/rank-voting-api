@@ -8,9 +8,23 @@ using System.Threading.Tasks;
 
 namespace RankVotingApi.Votes
 {
-    public class VoteBusiness(IVoteRepository voteRepository, ILogger<VoteBusiness> logger) : IVoteBusiness
+    public class VoteBusiness : IVoteBusiness
     {
-        public async Task SaveVotes(string voteId, string userId, IEnumerable<string> vote)
+		private readonly IVoteRepository voteRepository;
+		private readonly ILogger<VoteBusiness> logger;
+
+		public VoteBusiness(
+        IVoteRepository voteRepository, 
+        ILogger<VoteBusiness> logger)
+		{
+			this.voteRepository = voteRepository;
+			this.logger = logger;
+		}
+
+		public async Task SaveVotes(
+        string voteId, 
+        string userId,
+        IEnumerable<string> vote)
         {
             try
             {
@@ -32,17 +46,24 @@ namespace RankVotingApi.Votes
         public async Task<IEnumerable<string>> GetVoteResult(string voteId)
             => await voteRepository.GetVoteResult(voteId);
 
-        public async Task<string> SubmitNewRanking(string rankingName, IEnumerable<string> ranking)
+        public async Task<string> SubmitNewRanking(
+        string rankingName, 
+        IEnumerable<string> ranking)
         {
             var rankId = Guid.NewGuid().ToString()[..8];
             await voteRepository.SubmitNewRanking(rankId, rankingName, ranking);
             return rankId;
         }
 
-        public async Task<IEnumerable<string>> GetSubmittedVote(string voteId, string userId)
+        public async Task<IEnumerable<string>> GetSubmittedVote(
+        string voteId, 
+        string userId)
             => await voteRepository.GetSubmittedVote(voteId, userId);
 
         public async Task<string> GetRankingInfo(string voteId)
             => await voteRepository.GetRankingInfo(voteId);
+
+        public async Task<int> GetBallotCount(string voteId)
+            => await voteRepository.GetBallotCount(voteId);
     }
 }
