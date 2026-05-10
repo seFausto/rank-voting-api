@@ -66,4 +66,22 @@ Four tables managed by FluentMigrator migrations:
 
 ## Deployment
 
-The app targets Google Cloud (see `app.yaml`, `.gcloudignore`). The Dockerfile is a multi-stage Linux build using `mcr.microsoft.com/dotnet/sdk:8.0` → `mcr.microsoft.com/dotnet/aspnet:8.0`.
+The app deploys to **Azure App Service** (Linux container) using the existing Dockerfile (multi-stage build: `mcr.microsoft.com/dotnet/sdk:8.0` → `mcr.microsoft.com/dotnet/aspnet:8.0`).
+
+**One-time setup:**
+```bash
+# Push image to Azure Container Registry
+az acr create --resource-group <rg> --name <acr-name> --sku Basic
+az acr login --name <acr-name>
+docker build -t <acr-name>.azurecr.io/rank-voting-api:latest ./RankVotingApi
+docker push <acr-name>.azurecr.io/rank-voting-api:latest
+
+# Create App Service
+az appservice plan create --name <plan> --resource-group <rg> --is-linux --sku B1
+az webapp create --resource-group <rg> --plan <plan> --name <app-name> \
+  --deployment-container-image-name <acr-name>.azurecr.io/rank-voting-api:latest
+```
+
+**Required App Service application settings:**
+- `WEBSITES_PORT=8080` — routes traffic to the container's listening port
+- Kafka credentials from `kafkaClient.properties` (bootstrap servers, SASL key/secret)
