@@ -1,13 +1,10 @@
-﻿using Microsoft.AspNetCore.Cors;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
 using RankVotingApi.Votes;
-using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using System.Text.Json;
-using System.Linq;
 
 namespace RankVotingApi.Controllers
 {
@@ -19,52 +16,34 @@ namespace RankVotingApi.Controllers
         private readonly IVoteBusiness voteBusiness = voteBusiness;
 
         [HttpGet()]
-        public IActionResult HealthCheckAsync()
+        public IActionResult HealthCheck()
         {
-            Console.WriteLine("Healthcheck");
             return Ok();
         }
 
         [HttpPost("{voteId}/submit/{userId}")]
-        public async Task<IActionResult> SubmitVote(string voteId, string userId,
+        public async Task<IActionResult> SubmitVote(
+            string voteId,
+            string userId,
             [FromBody] IEnumerable<string> ranking)
         {
-            if (await voteBusiness.SaveVotes(voteId, userId, ranking))
-                return Ok();
-            else
-                return StatusCode(500, "failed");
+            await voteBusiness.SaveVotes(voteId, userId, ranking);
+            return Ok();
         }
 
         [HttpPost("{voteId}/candidates/{didVote}")]
         public async Task<IActionResult> GetCandidates(string voteId, bool didVote,
             [FromBody] string userId)
         {
-            IEnumerable<string> candidates;
+            if (didVote && string.IsNullOrEmpty(userId))
+                return BadRequest("User ID is required when didVote is true.");
 
-            if (didVote)
-            {
-                if (string.IsNullOrEmpty(userId))
-                {
-                    return BadRequest("User ID is required when didVote is true.");
-                }
+            var candidates = didVote
+                ? await voteBusiness.GetSubmittedVote(voteId, userId)
+                : await voteBusiness.GetCandidates(voteId);
 
-                candidates = await voteBusiness.GetSubmittedVote(voteId, userId);
-            }
-            else
-            {
-                candidates = await voteBusiness.GetCandidates(voteId);
-            }
-
-            var result = candidates.Select(candidate => new CandidateDto { Name = candidate }).ToList();
-
-            return Ok(new { Candidates = result });
+            return Ok(new { Candidates = candidates });
         }
-
-        public class CandidateDto
-        {
-            public string Name { get; set; }
-        }
-
 
         [HttpGet("{voteId}/result")]
         public async Task<IActionResult> GetResult(string voteId)
@@ -75,7 +54,7 @@ namespace RankVotingApi.Controllers
 
         [HttpPost("new/{rankingName}")]
         public async Task<IActionResult> SubmitNewRanking(
-            string rankingName, 
+            string rankingName,
             [FromBody] IEnumerable<string> ranking)
         {
             var voteId = await voteBusiness.SubmitNewRanking(rankingName, ranking);
@@ -83,10 +62,10 @@ namespace RankVotingApi.Controllers
         }
 
         [HttpGet("{voteId}/info")]
-        public async Task<IActionResult> GetRankingInfoAsync(string voteId)
+        public async Task<IActionResult> GetRankingInfo(string voteId)
         {
             var title = await voteBusiness.GetRankingInfo(voteId.Trim());
-            return new OkObjectResult(title);
+            return Ok(title);
         }
     }
 }
