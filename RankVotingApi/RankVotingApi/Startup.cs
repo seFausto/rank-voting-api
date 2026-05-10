@@ -1,11 +1,11 @@
 using FluentMigrator.Runner;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
-using RankVotingApi.KafkaConsumer;
 using RankVotingApi.Repository;
 using RankVotingApi.Votes;
 using System;
@@ -22,21 +22,15 @@ namespace RankVotingApi
         public IConfiguration Configuration { get; }
 
 
-        private static Microsoft.Extensions.DependencyInjection.ServiceProvider CreateServices()
+        private static ServiceProvider CreateServices()
         {
-            return new ServiceCollection()
-                // Add common FluentMigrator services
+            return new ServiceCollection()                
                 .AddFluentMigratorCore()
-                .ConfigureRunner(rb => rb
-                    // Add SQLite support to FluentMigrator
-                    .AddSQLite()
-                    // Set the connection string
-                    .WithGlobalConnectionString("Data Source=RankChoiceVoting.db")
-                    // Define the assembly containing the migrations
-                    .ScanIn(typeof(Migration_20210609131700_AddLogTable).Assembly).For.Migrations())
-                // Enable logging to console in the FluentMigrator way
+                .ConfigureRunner(rb => rb                    
+                    .AddSQLite()                    
+                    .WithGlobalConnectionString("Data Source=RankChoiceVoting.db")                    
+                    .ScanIn(typeof(Migration_20210609131700_AddLogTable).Assembly).For.Migrations())                
                 .AddLogging(lb => lb.AddFluentMigratorConsole())
-                // Build the service provider
                 .BuildServiceProvider(false);
         }
 
@@ -63,6 +57,11 @@ namespace RankVotingApi
             }));
 
             
+            services.AddRouting(options => 
+            { 
+                options.LowercaseUrls = true; 
+            });
+
             services.AddControllers();
 
             services.AddSwaggerGen(c =>
@@ -73,9 +72,6 @@ namespace RankVotingApi
             services.AddScoped<IVoteBusiness, VoteBusiness>();
             services.AddScoped<IVoteRepository, VoteRepository>();
 
-            services.AddHostedService<KafkaConsumerService>();
-
-            services.Configure<KafkaOptions>(Configuration.GetSection("KafkaOptions"));
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
@@ -97,6 +93,7 @@ namespace RankVotingApi
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
+                endpoints.MapGet("/health", () => Results.Ok());
             });
         }
     }
