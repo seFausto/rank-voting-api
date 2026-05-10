@@ -22,21 +22,15 @@ namespace RankVotingApi
         public IConfiguration Configuration { get; }
 
 
-        private static Microsoft.Extensions.DependencyInjection.ServiceProvider CreateServices()
+        private static ServiceProvider CreateServices()
         {
-            return new ServiceCollection()
-                // Add common FluentMigrator services
+            return new ServiceCollection()                
                 .AddFluentMigratorCore()
-                .ConfigureRunner(rb => rb
-                    // Add SQLite support to FluentMigrator
-                    .AddSQLite()
-                    // Set the connection string
-                    .WithGlobalConnectionString("Data Source=RankChoiceVoting.db")
-                    // Define the assembly containing the migrations
-                    .ScanIn(typeof(Migration_20210609131700_AddLogTable).Assembly).For.Migrations())
-                // Enable logging to console in the FluentMigrator way
+                .ConfigureRunner(rb => rb                    
+                    .AddSQLite()                    
+                    .WithGlobalConnectionString("Data Source=RankChoiceVoting.db")                    
+                    .ScanIn(typeof(Migration_20210609131700_AddLogTable).Assembly).For.Migrations())                
                 .AddLogging(lb => lb.AddFluentMigratorConsole())
-                // Build the service provider
                 .BuildServiceProvider(false);
         }
 
@@ -63,6 +57,11 @@ namespace RankVotingApi
             }));
 
             
+            services.AddRouting(options => 
+            { 
+                options.LowercaseUrls = true; 
+            });
+
             services.AddControllers();
 
             services.AddSwaggerGen(c =>
