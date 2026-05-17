@@ -12,6 +12,10 @@ insert_final_newline = true
 # Usings
 dotnet_sort_system_directives_first = true
 csharp_using_directive_placement = outside_namespace
+dotnet_diagnostic.IDE0008.severity = none
+
+# IDE0290: Use primary constructor
+dotnet_diagnostic.IDE0290.severity = silent
 
 # var
 csharp_style_var_for_built_in_types = false:suggestion

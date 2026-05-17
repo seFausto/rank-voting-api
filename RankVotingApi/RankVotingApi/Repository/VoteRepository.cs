@@ -1,132 +1,145 @@
-using Dapper;
-using Microsoft.Data.Sqlite;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Dapper;
+using Microsoft.Data.Sqlite;
 
-namespace RankVotingApi.Repository
+namespace RankVotingApi.Repository;
+
+public class VoteRepository : IVoteRepository
 {
-	public class VoteRepository : IVoteRepository
-	{
-		private const string ConnectionString = "Data Source=RankChoiceVoting.db";
+    private const string ConnectionString = "Data Source=RankChoiceVoting.db";
 
-		public async Task<IEnumerable<string>> GetCandidates(string voteId)
-		{
-			const string sql = @"SELECT Candidate
-                                FROM Candidates
-                                WHERE VoteId = @voteId;";
+    public async Task<IEnumerable<string>> GetCandidates(string voteId)
+    {
+        const string sql =
+            @"SELECT Candidate
+              FROM Candidates
+              WHERE VoteId = @voteId;";
 
-			using var connection = new SqliteConnection(ConnectionString);
-			return await connection.QueryAsync<string>(sql, new { voteId });
-		}
+        using var connection = new SqliteConnection(ConnectionString);
+        return await connection.QueryAsync<string>(sql, new { voteId });
+    }
 
-		public async Task<IEnumerable<string>> GetSubmittedVote(
-			string voteId,
-			string userId)
-		{
-			const string sql = @"SELECT Candidate
-                                FROM UserVotes
-                                WHERE VoteId = @voteId
-                                AND UserId = @userId
-                                ORDER BY Rank asc";
+    public async Task<IEnumerable<string>> GetSubmittedVote(
+        string voteId,
+        string userId)
+    {
+        const string sql =
+            @"SELECT Candidate
+              FROM UserVotes
+              WHERE VoteId = @voteId
+              AND UserId = @userId
+              ORDER BY Rank asc";
 
-			using var connection = new SqliteConnection(ConnectionString);
-			return await connection.QueryAsync<string>(sql, new { voteId, userId });
-		}
+        using var connection = new SqliteConnection(ConnectionString);
+        return await connection.QueryAsync<string>(sql, new { voteId, userId });
+    }
 
-		public async Task<IEnumerable<string>> GetVoteResult(string voteId)
-		{
-			const string sql = @"SELECT Candidate
-                                FROM Candidates
-                                WHERE VoteId = @voteId
-                                ORDER BY Rank ASC";
+    public async Task<IEnumerable<string>> GetVoteResult(string voteId)
+    {
+        const string sql =
+            @"SELECT Candidate
+              FROM Candidates
+              WHERE VoteId = @voteId
+              ORDER BY Rank ASC";
 
-			using var connection = new SqliteConnection(ConnectionString);
-			return await connection.QueryAsync<string>(sql, new { voteId });
-		}
+        using var connection = new SqliteConnection(ConnectionString);
+        return await connection.QueryAsync<string>(sql, new { voteId });
+    }
 
-		public async Task SaveVote(
-            string voteId,
-            string userId,
-            IEnumerable<string> vote)
-		{
-			const string insertUserVote = @"INSERT INTO UserVotes (VoteId, UserId, Rank, Candidate)
-                                VALUES (@voteId, @userId, @rank, @candidate)";
+    public async Task SaveVote(
+        string voteId,
+        string userId,
+        IEnumerable<string> vote)
+    {
+        const string insertUserVote =
+            @"INSERT INTO UserVotes (VoteId, UserId, Rank, Candidate)
+              VALUES (@voteId, @userId, @rank, @candidate)";
 
-			const string updateScore = @"UPDATE Candidates
-                                SET Rank = Rank + @rank
-                                WHERE VoteId = @voteId
-                                AND Candidate = @candidate;";
+        const string updateScore =
+            @"UPDATE Candidates
+              SET Rank = Rank + @rank
+              WHERE VoteId = @voteId
+              AND Candidate = @candidate;";
 
-			var candidates = vote.ToList();
+        var candidates = vote.ToList();
 
-			using var connection = new SqliteConnection(ConnectionString);
-			await connection.OpenAsync();
-			using var transaction = connection.BeginTransaction();
+        using var connection = new SqliteConnection(ConnectionString);
+        await connection.OpenAsync();
 
-			for (int i = 0; i < candidates.Count; i++)
-			{
-				await connection.ExecuteAsync(insertUserVote,
-					new { voteId, userId, rank = i, candidate = candidates[i] },
-					transaction);
+        using var transaction = connection.BeginTransaction();
 
-				await connection.ExecuteAsync(updateScore,
-					new { rank = i, voteId, candidate = candidates[i] },
-					transaction);
-			}
+        for (int i = 0; i < candidates.Count; i++)
+        {
+            await connection.ExecuteAsync(
+                insertUserVote,
+                new { voteId, userId, rank = i, candidate = candidates[i] },
+                transaction);
 
-			await transaction.CommitAsync();
-		}
+            await connection.ExecuteAsync(
+                updateScore,
+                new { rank = i, voteId, candidate = candidates[i] },
+                transaction);
+        }
 
-		public async Task SubmitNewRanking(
-		    string voteId,
-		    string rankingName,
-            IEnumerable<string> ranking)
-		{
-			const string insertIntoRanking = @"INSERT INTO Ranking (VoteId, Title, Description)
-                                 VALUES (@voteId, @title, @description)";
+        await transaction.CommitAsync();
+    }
 
-			const string insertIntoCandidates = @"INSERT INTO Candidates (VoteId, Candidate, Rank)
-                                 VALUES (@voteId, @candidate, @rank)";
+    public async Task SubmitNewRanking(
+        string voteId,
+        string rankingName,
+        IEnumerable<string> ranking)
+    {
+        const string insertIntoRanking =
+            @"INSERT INTO Ranking (VoteId, Title, Description)
+              VALUES (@voteId, @title, @description)";
 
-			var candidates = ranking.ToList();
+        const string insertIntoCandidates =
+            @"INSERT INTO Candidates (VoteId, Candidate, Rank)
+              VALUES (@voteId, @candidate, @rank)";
 
-			using var connection = new SqliteConnection(ConnectionString);
-			await connection.OpenAsync();
-			using var transaction = connection.BeginTransaction();
+        var candidates = ranking.ToList();
 
-			await connection.ExecuteAsync(insertIntoRanking,
-				new { voteId, title = rankingName, description = string.Empty },
-				transaction);
+        using var connection = new SqliteConnection(ConnectionString);
+        await connection.OpenAsync();
+        using var transaction = connection.BeginTransaction();
 
-			for (int i = 0; i < candidates.Count; i++)
-			{
-				await connection.ExecuteAsync(insertIntoCandidates,
-					new { rank = 0, voteId, candidate = candidates[i] },
-					transaction);
-			}
+        await connection.ExecuteAsync(
+            insertIntoRanking,
+            new { voteId, title = rankingName, description = string.Empty },
+            transaction);
 
-			await transaction.CommitAsync();
-		}
+        for (int i = 0; i < candidates.Count; i++)
+        {
+            await connection.ExecuteAsync(
+                insertIntoCandidates,
+                new { rank = 0, voteId, candidate = candidates[i] },
+                transaction);
+        }
 
-		public async Task<int> GetBallotCount(string voteId)
-		{
-			const string sql = @"SELECT COUNT(DISTINCT UserId)
-                                FROM UserVotes
-                                WHERE VoteId = @voteId";
+        await transaction.CommitAsync();
+    }
 
-			using var connection = new SqliteConnection(ConnectionString);
-			return await connection.ExecuteScalarAsync<int>(sql, new { voteId });
-		}
+    public async Task<int> GetBallotCount(string voteId)
+    {
+        const string sql =
+            @"SELECT COUNT(DISTINCT UserId)
+              FROM UserVotes
+              WHERE VoteId = @voteId";
 
-		public async Task<string> GetRankingInfo(string voteId)
-		{
-			const string sql = @"SELECT Title
-                                FROM Ranking
-                                WHERE VoteId = @voteId";
+        using var connection = new SqliteConnection(ConnectionString);
+        return await connection.ExecuteScalarAsync<int>(sql, new { voteId });
+    }
 
-			using var connection = new SqliteConnection(ConnectionString);
-			return await connection.QuerySingleOrDefaultAsync<string>(sql, new { voteId });
-		}
-	}
+    public async Task<string> GetRankingInfo(string voteId)
+    {
+        const string sql =
+            @"SELECT Title
+              FROM Ranking
+              WHERE VoteId = @voteId";
+
+        using var connection = new SqliteConnection(ConnectionString);
+        return await connection.QuerySingleOrDefaultAsync<string>(sql, new { voteId });
+    }
 }

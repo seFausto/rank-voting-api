@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 
 namespace RankVotingApi.Common;
+
 public static class Helper
 {
     private static readonly Random rng = new();
@@ -18,5 +19,4 @@ public static class Helper
 
         return list;
     }
-
 }
