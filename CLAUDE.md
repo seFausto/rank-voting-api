@@ -2,80 +2,49 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Commands
-
-All commands run from `RankVotingApi/RankVotingApi/` unless otherwise noted.
+## Build & Run
 
 ```bash
 # Build
-dotnet build
+dotnet build RankVotingApi/RankVotingApi.sln
 
-# Run (from RankVotingApi/RankVotingApi/)
-dotnet run
+# Run (default port 8080, override with PORT env var)
+dotnet run --project RankVotingApi/RankVotingApi/RankVotingApi.csproj
 
-# Build Docker image (from RankVotingApi/)
-docker build -t rank-voting-api .
+# Swagger UI available at /swagger in development
 ```
 
-There are no automated tests in this project.
+No test project exists yet.
 
 ## Architecture
 
-**Stack:** ASP.NET Core 8 Web API · SQLite + Dapper · FluentMigrator
+Three-layer structure: **Controller → Business → Repository**, each layer backed by an interface.
 
-The project uses a classic layered architecture with a single feature domain (`Votes`):
+- `Votes/RankingsController.cs` — HTTP endpoints, delegates all logic to `IVoteBusiness`
+- `Votes/VoteBusiness.cs` — business logic (e.g. shuffles candidates before returning them)
+- `Repository/VoteRepository.cs` — Dapper queries against SQLite (`RankChoiceVoting.db`)
+- `Common/Extensions.cs` — Fisher-Yates shuffle extension on `List<T>`
 
-```
-VoteController  →  IVoteBusiness / VoteBusiness  →  IVoteRepository / VoteRepository  →  SQLite
-```
-
-- **Controller** (`Votes/VoteController.cs`): REST endpoints. Uses old-style ASP.NET Core startup (`Startup.cs` + `Program.cs` with `CreateHostBuilder`).
-- **Business layer** (`Votes/VoteBusiness.cs`): Implements Borda count voting logic. Candidates are shuffled on retrieval to prevent UI order bias (`Common/Extensions.cs`). Scores are cumulative — lower total = better rank.
-- **Repository** (`Repository/VoteRepository.cs`): All SQL via Dapper. SQLite database file is `RankChoiceVoting.db` (auto-created).
-- **Migrations** (`Repository/_Migrations/`): FluentMigrator migrations run automatically at startup in `ConfigureServices`. Timestamp-prefixed class names.
-
-## Key Configuration
-
-- Port defaults to `8080`; override with `PORT` environment variable (used in Docker).
-- CORS is open (`AllowEverything` policy) — all origins, methods, and headers allowed.
-- Swagger UI is only enabled in the Development environment.
-
-## API Endpoints
-
-| Method | Route | Purpose |
-|--------|-------|---------|
-| GET | `/vote` | Health check |
-| POST | `/vote/new/{rankingName}` | Create new voting event |
-| GET | `/vote/{voteId}/info` | Get voting event metadata |
-| POST | `/vote/{voteId}/candidates/{didVote}` | List candidates (shuffled); checks if user already voted |
-| POST | `/vote/{voteId}/submit/{userId}` | Submit ranked ballot |
-| GET | `/vote/{voteId}/result` | Get Borda count results |
+Migrations run automatically on startup via FluentMigrator. Migration files live in `Repository/_Migrations/` and follow the naming convention `Migration_YYYYMMDDHHMMSS_Description.cs`.
 
 ## Database Schema
 
-Four tables managed by FluentMigrator migrations:
-- `Ranking` — voting events (VoteId, Title, Description)
-- `Candidates` — candidates per event with accumulated Borda score
-- `UserVotes` — individual ballot submissions (one row per candidate per user)
-- `Log` — legacy logging table (unused)
+| Table | Key Columns | Notes |
+|-------|-------------|-------|
+| `Ranking` | `VoteId`, `Title`, `Description` | One row per ballot/election |
+| `Candidates` | `VoteId`, `Candidate`, `Rank` | `Rank` accumulates Borda scores as votes are cast |
+| `UserVotes` | `VoteId`, `UserId`, `Rank`, `Candidate` | Per-user ballot; `Rank` = 0-based position chosen |
 
-## Deployment
+## Voting Algorithm
 
-The app deploys to **Azure App Service** (Linux container) using the existing Dockerfile (multi-stage build: `mcr.microsoft.com/dotnet/sdk:8.0` → `mcr.microsoft.com/dotnet/aspnet:8.0`).
+Borda count: when a user submits a ballot, each candidate's `Rank` in the `Candidates` table is incremented by the position the user placed them (0 = first choice). Lower cumulative rank = more preferred. Results are returned ordered `ASC` by `Rank`.
 
-**One-time setup:**
-```bash
-# Push image to Azure Container Registry
-az acr create --resource-group <rg> --name <acr-name> --sku Basic
-az acr login --name <acr-name>
-docker build -t <acr-name>.azurecr.io/rank-voting-api:latest ./RankVotingApi
-docker push <acr-name>.azurecr.io/rank-voting-api:latest
+## Coding Conventions
 
-# Create App Service
-az appservice plan create --name <plan> --resource-group <rg> --is-linux --sku B1
-az webapp create --resource-group <rg> --plan <plan> --name <app-name> \
-  --deployment-container-image-name <acr-name>.azurecr.io/rank-voting-api:latest
-```
-
-**Required App Service application settings:**
-- `WEBSITES_PORT=8080` — routes traffic to the container's listening port
+- Multi-parameter method signatures: put each parameter on its own line, indented (one parameter per line)
+- Use primary constructor syntax for controllers (see `RankingsController`)
+- Use expression-bodied members for simple async pass-throughs (see `VoteBusiness`)
+- Wrap repository calls that mutate state in a SQLite transaction
+- SQL strings are `const string` locals named descriptively (`insertUserVote`, `updateScore`, etc.)
+- `VoteId` is an 8-character GUID prefix generated in `VoteBusiness.SubmitNewRanking`
+- Interfaces live alongside their implementations in the same folder

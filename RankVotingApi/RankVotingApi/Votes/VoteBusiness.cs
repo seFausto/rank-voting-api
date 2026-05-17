@@ -14,17 +14,17 @@ namespace RankVotingApi.Votes
 		private readonly ILogger<VoteBusiness> logger;
 
 		public VoteBusiness(
-        IVoteRepository voteRepository, 
-        ILogger<VoteBusiness> logger)
+            IVoteRepository voteRepository,
+            ILogger<VoteBusiness> logger)
 		{
 			this.voteRepository = voteRepository;
 			this.logger = logger;
 		}
 
 		public async Task SaveVotes(
-        string voteId, 
-        string userId,
-        IEnumerable<string> vote)
+            string voteId,
+            string userId,
+            IEnumerable<string> vote)
         {
             try
             {
@@ -47,8 +47,8 @@ namespace RankVotingApi.Votes
             => await voteRepository.GetVoteResult(voteId);
 
         public async Task<string> SubmitNewRanking(
-        string rankingName, 
-        IEnumerable<string> ranking)
+            string rankingName,
+            IEnumerable<string> ranking)
         {
             var rankId = Guid.NewGuid().ToString()[..8];
             await voteRepository.SubmitNewRanking(rankId, rankingName, ranking);
@@ -56,8 +56,8 @@ namespace RankVotingApi.Votes
         }
 
         public async Task<IEnumerable<string>> GetSubmittedVote(
-        string voteId, 
-        string userId)
+            string voteId,
+            string userId)
             => await voteRepository.GetSubmittedVote(voteId, userId);
 
         public async Task<string> GetRankingInfo(string voteId)

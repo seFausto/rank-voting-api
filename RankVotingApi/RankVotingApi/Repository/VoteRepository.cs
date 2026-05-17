@@ -20,7 +20,9 @@ namespace RankVotingApi.Repository
             return await connection.QueryAsync<string>(sql, new { voteId });
         }
 
-        public async Task<IEnumerable<string>> GetSubmittedVote(string voteId, string userId)
+        public async Task<IEnumerable<string>> GetSubmittedVote(
+            string voteId, 
+            string userId)
         {
             const string sql = @"SELECT Candidate
                                 FROM UserVotes
