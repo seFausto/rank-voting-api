@@ -359,3 +359,4 @@ MigrationBackup/
 # Exclude SQLite DB
 *.db
 
+claude/*
